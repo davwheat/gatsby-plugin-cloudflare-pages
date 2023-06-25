@@ -43,9 +43,10 @@ jobs:
       - name: Set up node
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: '20.x'
           cache: 'yarn'
           always-auth: true
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: |
@@ -56,4 +57,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           yarn prepare
-          yarn npm publish
+          npm publish

@@ -45,6 +45,7 @@ jobs:
         with:
           node-version: 20
           cache: 'yarn'
+          always-auth: true
 
       - name: Install dependencies
         run: |

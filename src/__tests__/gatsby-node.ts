@@ -71,7 +71,7 @@ describe(`gatsby-node.js`, () => {
       info: jest.fn(),
     }
 
-    it('creates redirects for SSR and DSG pages in format Netlify expects', async () => {
+    it('errors for SSR and DSG pages', async () => {
       const store = {
         getState: jest.fn().mockReturnValue({
           redirects: [],
@@ -89,64 +89,10 @@ describe(`gatsby-node.js`, () => {
           program: { directory: '' },
         }),
       }
-      const expectedValue = [
-        '',
-        '## Created with gatsby-plugin-netlify',
-        'some/path  /.netlify/functions/__ssr  200',
-        '/page-data/some/path/page-data.json  /.netlify/functions/__ssr  200',
-        'some/other/path  /.netlify/functions/__dsg  200',
-        '/page-data/some/other/path/page-data.json  /.netlify/functions/__dsg  200',
-      ].join(`\n`)
 
-      await onPostBuild({ store, pathPrefix: '', reporter }, {})
-      expect(writeFile).toHaveBeenLastCalledWith('mock-file-path', expectedValue)
-    })
-
-    it('creates skip file for unneeded function bundles', async () => {
-      const store = {
-        getState: jest.fn().mockReturnValue({
-          redirects: [],
-          pages: [
-            {
-              mode: 'DSG',
-              path: 'some/other/path',
-            },
-          ],
-          functions: [],
-          program: { directory: '' },
-        }),
-      }
-      const expectedValue = {
-        API: false,
-        SSR: false,
-        DSG: true,
-      }
-
-      await onPostBuild({ store, pathPrefix: '', reporter }, {})
-      expect(writeJson).toHaveBeenLastCalledWith('.cache/.nf-skip-gatsby-functions', expectedValue)
-    })
-
-    it('removes skip file when all function bundles needed', async () => {
-      const store = {
-        getState: jest.fn().mockReturnValue({
-          redirects: [],
-          pages: [
-            {
-              mode: 'SSR',
-              path: 'some/path',
-            },
-            {
-              mode: 'DSG',
-              path: 'some/other/path',
-            },
-          ],
-          functions: [true],
-          program: { directory: '' },
-        }),
-      }
-
-      await onPostBuild({ store, pathPrefix: '', reporter }, {})
-      expect(remove).toHaveBeenCalled()
+      await expect(async () => {
+        await onPostBuild({ store, pathPrefix: '', reporter }, {})
+      }).rejects.toThrowError(/This is not supported by Cloudflare Pages/)
     })
   })
 })

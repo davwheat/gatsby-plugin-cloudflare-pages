@@ -6,7 +6,7 @@ import { mkdtemp } from 'fs-extra'
 
 // eslint-disable-next-line max-lines-per-function
 export const createPluginData = async () => {
-  const tmpDir = await mkdtemp(join(tmpdir(), `gatsby-plugin-netlify-`))
+  const tmpDir = await mkdtemp(join(tmpdir(), `gatsby-plugin-cloudflare-pages-`))
 
   return {
     components: new Map([

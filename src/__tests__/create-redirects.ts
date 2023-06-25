@@ -13,71 +13,36 @@ jest.mock(`fs-extra`, () => {
 
 const redirects = [
   {
-    "fromPath": "/foo",
-    "isPermanent": false,
-    "ignoreCase": true,
-    "redirectInBrowser": false,
-    "toPath": "/bar"
+    fromPath: '/foo',
+    isPermanent: false,
+    ignoreCase: true,
+    redirectInBrowser: false,
+    toPath: '/bar',
   },
   {
-    "fromPath": "/blog",
-    "isPermanent": false,
-    "ignoreCase": true,
-    "redirectInBrowser": false,
-    "toPath": "/canada/blog",
-    "conditions": {
-      "country": "ca"
-    }
+    fromPath: '/dogs/*',
+    isPermanent: false,
+    ignoreCase: true,
+    redirectInBrowser: false,
+    toPath: '/animals/*',
   },
   {
-    "fromPath": "/speaker",
-    "isPermanent": false,
-    "ignoreCase": true,
-    "redirectInBrowser": false,
-    "toPath": "/english/speaker",
-    "conditions": {
-      "language": [
-        "en"
-      ]
-    }
+    fromPath: '/baz',
+    isPermanent: true,
+    ignoreCase: true,
+    redirectInBrowser: false,
+    toPath: '/qux',
   },
   {
-    "fromPath": "/speaker",
-    "isPermanent": false,
-    "ignoreCase": true,
-    "redirectInBrowser": false,
-    "toPath": "/french/speaker",
-    "conditions": {
-      "language": [
-        "fr"
-      ]
-    }
+    fromPath: '/a',
+    isPermanent: false,
+    ignoreCase: true,
+    redirectInBrowser: true,
+    toPath: '/b',
   },
-  {
-    "fromPath": "/param?id=7",
-    "isPermanent": false,
-    "ignoreCase": true,
-    "redirectInBrowser": false,
-    "toPath": "/test"
-  },
-  {
-    "fromPath": "/dogs/*",
-    "isPermanent": false,
-    "ignoreCase": true,
-    "redirectInBrowser": false,
-    "toPath": "/animals/*"
-  },
-  {
-    "fromPath": "/cats?id=:id",
-    "isPermanent": false,
-    "ignoreCase": true,
-    "redirectInBrowser": false,
-    "toPath": "/animals/:id"
-  }
 ]
 
 describe(`create-redirects`, () => {
-
   it(`writes file`, async () => {
     const pluginData = await createPluginData()
 

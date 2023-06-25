@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`build-headers-program with manifest['pages-manifest'] 1`] = `
-"## Created with gatsby-plugin-netlify
+"## Created with gatsby-plugin-cloudflare-pages
 
 /*
   X-Frame-Options: DENY
@@ -38,7 +38,7 @@ exports[`build-headers-program with manifest['pages-manifest'] 1`] = `
 `;
 
 exports[`build-headers-program with security headers 1`] = `
-"## Created with gatsby-plugin-netlify
+"## Created with gatsby-plugin-cloudflare-pages
 
 /*
   X-Frame-Options: ALLOW-FROM https://app.storyblok.com/
@@ -76,7 +76,7 @@ exports[`build-headers-program with security headers 1`] = `
 `;
 
 exports[`build-headers-program without caching headers 1`] = `
-"## Created with gatsby-plugin-netlify
+"## Created with gatsby-plugin-cloudflare-pages
 
 /*
   X-Frame-Options: DENY

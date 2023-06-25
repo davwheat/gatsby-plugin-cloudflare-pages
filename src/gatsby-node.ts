@@ -1,9 +1,8 @@
-// https://www.netlify.com/docs/headers-and-basic-auth/
 import { join } from 'path'
 
 import { writeJson, remove } from 'fs-extra'
 import type { GatsbyNode } from 'gatsby'
-import { generatePageDataPath } from 'gatsby-core-utils'
+// import { generatePageDataPath } from 'gatsby-core-utils'
 import WebpackAssetsManifest from 'webpack-assets-manifest'
 
 import buildHeadersProgram from './build-headers-program'
@@ -13,21 +12,17 @@ import makePluginData from './plugin-data'
 
 const assetsManifest: Record<string, unknown> = {}
 
-export const pluginOptionsSchema: GatsbyNode["pluginOptionsSchema"] = ({ Joi }) => {
+export const pluginOptionsSchema: GatsbyNode['pluginOptionsSchema'] = ({ Joi }) => {
   const MATCH_ALL_KEYS = /^/
 
-  // headers is a specific type used by Netlify: https://www.gatsbyjs.com/plugins/gatsby-plugin-netlify/#headers
   const headersSchema = Joi.object()
     .pattern(MATCH_ALL_KEYS, Joi.array().items(Joi.string()))
-    .description(`Add more Netlify headers to specific pages`)
+    .description(`Add more HTTP headers to specific pages`)
 
   return Joi.object({
     headers: headersSchema,
     allPageHeaders: Joi.array().items(Joi.string()).description(`Add more headers to all the pages`),
     mergeSecurityHeaders: Joi.boolean().description(`When set to false, turns off the default security headers`),
-    mergeLinkHeaders: Joi.boolean().description(`When set to false, turns off the default gatsby js headers`).forbidden().messages({
-      "any.unknown": `"mergeLinkHeaders" is no longer supported. Gatsby no longer adds preload headers as they negatively affect load performance`
-    }),
     mergeCachingHeaders: Joi.boolean().description(`When set to false, turns off the default caching headers`),
     transformHeaders: Joi.function()
       .maxArity(2)
@@ -41,7 +36,7 @@ export const pluginOptionsSchema: GatsbyNode["pluginOptionsSchema"] = ({ Joi }) 
 }
 
 // Inject a webpack plugin to get the file manifests so we can translate all link headers
-export const onCreateWebpackConfig: GatsbyNode["onCreateWebpackConfig"] = ({ actions, stage }) => {
+export const onCreateWebpackConfig: GatsbyNode['onCreateWebpackConfig'] = ({ actions, stage }) => {
   // We only need to get manifest for production browser bundle
   if (stage !== BUILD_BROWSER_BUNDLE_STAGE) {
     return
@@ -57,17 +52,18 @@ export const onCreateWebpackConfig: GatsbyNode["onCreateWebpackConfig"] = ({ act
   })
 }
 
-export const onPostBuild: GatsbyNode["onPostBuild"] = async ({ store, pathPrefix, reporter }, userPluginOptions) => {
+export const onPostBuild: GatsbyNode['onPostBuild'] = async ({ store, pathPrefix, reporter }, userPluginOptions) => {
   const pluginData = makePluginData(store, assetsManifest, pathPrefix)
   const pluginOptions = { ...DEFAULT_OPTIONS, ...userPluginOptions }
 
   const { redirects, pages, functions = [], program } = store.getState()
-  if (pages.size > PAGE_COUNT_WARN && pluginOptions.mergeCachingHeaders ) {
+  if (pages.size > PAGE_COUNT_WARN && pluginOptions.mergeCachingHeaders) {
     reporter.warn(
-      `[gatsby-plugin-netlify] Your site has ${pages.size} pages, which means that the generated headers file could become very large. Consider disabling "mergeCachingHeaders" in your plugin config`,
+      `[gatsby-plugin-cloudflare-pages] Your site has ${pages.size} pages, which means that the generated headers file could become very large. Consider disabling "mergeCachingHeaders" in your plugin config`,
     )
   }
-  reporter.info(`[gatsby-plugin-netlify] Creating SSR/DSG redirects...`)
+
+  reporter.info(`[gatsby-plugin-cloudflare-pages] Creating SSR/DSG redirects...`)
 
   let count = 0
   const rewrites: any = []
@@ -84,20 +80,24 @@ export const onPostBuild: GatsbyNode["onPostBuild"] = async ({ store, pathPrefix
     const matchPathIsNotPath = matchPath && matchPath !== path
 
     if (mode === `SSR` || mode === `DSG`) {
-      neededFunctions[mode] = true
-      const fromPath = matchPathClean ?? path
-      const toPath = mode === `SSR` ? `/.netlify/functions/__ssr` : `/.netlify/functions/__dsg`
-      count++
-      rewrites.push(
-        {
-          fromPath,
-          toPath,
-        },
-        {
-          fromPath: generatePageDataPath(`/`, fromPath),
-          toPath,
-        },
+      throw new Error(
+        `[gatsby-plugin-cloudflare-pages] Found ${mode} page at ${path}. This is not supported by Cloudflare Pages.`,
       )
+
+      // neededFunctions[mode] = true
+      // const fromPath = matchPathClean ?? path
+      // const toPath = mode === `SSR` ? `/.netlify/functions/__ssr` : `/.netlify/functions/__dsg`
+      // count++
+      // rewrites.push(
+      //   {
+      //     fromPath,
+      //     toPath,
+      //   },
+      //   {
+      //     fromPath: generatePageDataPath(`/`, fromPath),
+      //     toPath,
+      //   },
+      // )
     } else if (pluginOptions.generateMatchPathRewrites && matchPathIsNotPath) {
       rewrites.push({
         fromPath: matchPathClean,
@@ -105,7 +105,7 @@ export const onPostBuild: GatsbyNode["onPostBuild"] = async ({ store, pathPrefix
       })
     }
   })
-  reporter.info(`[gatsby-plugin-netlify] Created ${count} SSR/DSG redirect${count === 1 ? `` : `s`}...`)
+  reporter.info(`[gatsby-plugin-cloudflare-pages] Created ${count} SSR/DSG redirect${count === 1 ? `` : `s`}...`)
 
   const skipFilePath = join(program.directory, `.cache`, `.nf-skip-gatsby-functions`)
   const generateSkipFile = Object.values(neededFunctions).includes(false)

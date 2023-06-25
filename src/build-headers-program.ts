@@ -8,7 +8,7 @@ import {
   SECURITY_HEADERS,
   CACHING_HEADERS,
   LINK_REGEX,
-  NETLIFY_HEADERS_FILENAME,
+  HEADERS_FILENAME,
 } from './constants'
 import { isBoolean, flow } from './util'
 
@@ -28,7 +28,7 @@ const validHeaders = (headers: any, reporter: any) => {
       headersList.every((header) => {
         if (typeof header === 'string' && !getHeaderName(header)) {
           reporter.panic(
-            `[gatsby-plugin-netlify] ${path} contains an invalid header (${header}). Please check your plugin configuration`,
+            `[gatsby-plugin-cloudflare-pages] ${path} contains an invalid header (${header}). Please check your plugin configuration`,
           )
         }
         return true
@@ -72,52 +72,54 @@ const headersMerge = (userHeaders: any, defaultHeaders: any) => {
   return merged
 }
 
-const transformLink = (manifest: any, publicFolder: any, pathPrefix: any) => (header: any) => header.replace(LINK_REGEX, (__: any, prefix: any, file: any, suffix: any) => {
-  const hashed = manifest[file]
-  if (hashed) {
-    return `${prefix}${pathPrefix}${hashed}${suffix}`
-  }
-  if (existsSync(publicFolder(file))) {
-    return `${prefix}${pathPrefix}${file}${suffix}`
-  }
-  throw new Error(
-    `Could not find the file specified in the Link header \`${header}\`.` +
-      `The gatsby-plugin-netlify is looking for a matching file (with or without a ` +
-      `webpack hash). Check the public folder and your gatsby-config.js to ensure you are ` +
-      `pointing to a public file.`,
-  )
-})
+const transformLink = (manifest: any, publicFolder: any, pathPrefix: any) => (header: any) =>
+  header.replace(LINK_REGEX, (__: any, prefix: any, file: any, suffix: any) => {
+    const hashed = manifest[file]
+    if (hashed) {
+      return `${prefix}${pathPrefix}${hashed}${suffix}`
+    }
+    if (existsSync(publicFolder(file))) {
+      return `${prefix}${pathPrefix}${file}${suffix}`
+    }
+    throw new Error(
+      `Could not find the file specified in the Link header \`${header}\`. ` +
+        `gatsby-plugin-cloudflare-pages is looking for a matching file (with or without a ` +
+        `webpack hash). Check the public folder and your gatsby-config.js to ensure you are ` +
+        `pointing to a public file.`,
+    )
+  })
 
 // Writes out headers file format, with two spaces for indentation
-// https://www.netlify.com/docs/headers-and-basic-auth/
-const stringifyHeaders = (headers: any) => Object.entries(headers).reduce((text, [path, headerList]: [string, Array<string>]) => {
-  const headersString = headerList.reduce((accum, header) => `${accum}  ${header}\n`, ``)
-  return `${text}${path}\n${headersString}`
-}, ``)
+// https://developers.cloudflare.com/pages/platform/headers
+const stringifyHeaders = (headers: any) =>
+  Object.entries(headers).reduce((text, [path, headerList]: [string, Array<string>]) => {
+    const headersString = headerList.reduce((accum, header) => `${accum}  ${header}\n`, ``)
+    return `${text}${path}\n${headersString}`
+  }, ``)
 
 // program methods
 
 const validateUserOptions = (pluginOptions: any, reporter: any) => (headers: any) => {
   if (!validHeaders(headers, reporter)) {
     throw new Error(
-      `The "headers" option to gatsby-plugin-netlify is in the wrong shape. ` +
+      `The "headers" option to gatsby-plugin-cloudflare-pages is in the wrong shape. ` +
         `You should pass in a object with string keys (representing the paths) and an array ` +
         `of strings as the value (representing the headers). ` +
         `Check your gatsby-config.js.`,
     )
   }
 
-  [`mergeSecurityHeaders`, `mergeCachingHeaders`].forEach((mergeOption) => {
+  ;[`mergeSecurityHeaders`, `mergeCachingHeaders`].forEach((mergeOption) => {
     if (!isBoolean(pluginOptions[mergeOption])) {
       throw new TypeError(
-        `The "${mergeOption}" option to gatsby-plugin-netlify must be a boolean. Check your gatsby-config.js.`,
+        `The "${mergeOption}" option to gatsby-plugin-cloudflare-pages must be a boolean. Check your gatsby-config.js.`,
       )
     }
   })
 
   if (typeof pluginOptions.transformHeaders !== 'function') {
     throw new TypeError(
-      `The "transformHeaders" option to gatsby-plugin-netlify must be a function ` +
+      `The "transformHeaders" option to gatsby-plugin-cloudflare-pages must be a function ` +
         `that returns an array of header strings. ` +
         `Check your gatsby-config.js.`,
     )
@@ -127,22 +129,17 @@ const validateUserOptions = (pluginOptions: any, reporter: any) => (headers: any
 }
 
 const mapUserLinkHeaders =
-  ({
-    manifest,
-    pathPrefix,
-    publicFolder
-  }: any) =>
-  (headers: any) => Object.fromEntries(
-    Object.entries(headers).map(([path, headerList]: [string, Array<string>]) => [
-      path,
-      headerList.map(transformLink(manifest, publicFolder, pathPrefix)),
-    ]),
-  )
+  ({ manifest, pathPrefix, publicFolder }: any) =>
+  (headers: any) =>
+    Object.fromEntries(
+      Object.entries(headers).map(([path, headerList]: [string, Array<string>]) => [
+        path,
+        headerList.map(transformLink(manifest, publicFolder, pathPrefix)),
+      ]),
+    )
 
 const mapUserLinkAllPageHeaders =
-  (pluginData: any, {
-    allPageHeaders
-  }: any) =>
+  (pluginData: any, { allPageHeaders }: any) =>
   (headers: any) => {
     if (!allPageHeaders) {
       return headers
@@ -162,9 +159,7 @@ const mapUserLinkAllPageHeaders =
   }
 
 const applySecurityHeaders =
-  ({
-    mergeSecurityHeaders
-  }: any) =>
+  ({ mergeSecurityHeaders }: any) =>
   (headers: any) => {
     if (!mergeSecurityHeaders) {
       return headers
@@ -174,9 +169,7 @@ const applySecurityHeaders =
   }
 
 const applyCachingHeaders =
-  (pluginData: any, {
-    mergeCachingHeaders
-  }: any) =>
+  (pluginData: any, { mergeCachingHeaders }: any) =>
   (headers: any) => {
     if (!mergeCachingHeaders) {
       return headers
@@ -205,27 +198,22 @@ const applyCachingHeaders =
   }
 
 const applyTransformHeaders =
-  ({
-    transformHeaders
-  }: any) =>
-  (headers: any) =>  
+  ({ transformHeaders }: any) =>
+  (headers: any) =>
     Object.entries(headers).reduce((temp, [key, value]) => {
       temp[key] = transformHeaders(value)
       return temp
     }, {})
-  
 
 const transformToString = (headers: any) => `${HEADER_COMMENT}\n\n${stringifyHeaders(headers)}`
 
 const writeHeadersFile =
-  ({
-    publicFolder
-  }: any) =>
-  (contents: any) => writeFile(publicFolder(NETLIFY_HEADERS_FILENAME), contents)
+  ({ publicFolder }: any) =>
+  (contents: any) =>
+    writeFile(publicFolder(HEADERS_FILENAME), contents)
 
-const buildHeadersProgram = (pluginData: any, pluginOptions: any, reporter: any) => 
-  flow(
-    [
+const buildHeadersProgram = (pluginData: any, pluginOptions: any, reporter: any) =>
+  flow([
     validateUserOptions(pluginOptions, reporter),
     mapUserLinkHeaders(pluginData),
     applySecurityHeaders(pluginOptions),
@@ -234,8 +222,7 @@ const buildHeadersProgram = (pluginData: any, pluginOptions: any, reporter: any)
     applyTransformHeaders(pluginOptions),
     transformToString,
     writeHeadersFile(pluginData),
-    ])(pluginOptions.headers)
-  
+  ])(pluginOptions.headers)
 
 export default buildHeadersProgram
 /* eslint-enable max-lines */

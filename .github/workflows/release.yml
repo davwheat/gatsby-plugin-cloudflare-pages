@@ -1,0 +1,58 @@
+name: Publish
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+    name: Test build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Build library
+        run: |
+          yarn build
+
+      - name: Test library
+        run: |
+          yarn test
+
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish
+    needs: ['build_test']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: |
+          yarn install --immutable
+
+      - name: Build and publish library to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          yarn prepare
+          yarn publish

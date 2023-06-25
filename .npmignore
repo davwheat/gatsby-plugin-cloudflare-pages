@@ -38,3 +38,5 @@ examples
 .prettierrc.js
 renovate.json
 .baberrc
+
+.yarn/

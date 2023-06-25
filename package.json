@@ -6,6 +6,7 @@
   "bugs": {
     "url": "https://github.com/davwheat/gatsby-plugin-cloudflare-pages/issues"
   },
+  "private": false,
   "contributors": [
     {
       "name": "Nathanael Beisiegel",

@@ -55,4 +55,4 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           yarn prepare
-          yarn publish
+          yarn npm publish

@@ -17,6 +17,10 @@
       "email": "david@davwheat.dev"
     }
   ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "dependencies": {
     "@babel/runtime": "^7.22.5",
     "fs-extra": "^10.1.0",

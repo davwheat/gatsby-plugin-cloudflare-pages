@@ -1,32 +1,28 @@
-# gatsby-plugin-netlify
+# gatsby-plugin-cloudflare-pages
 
-This plugin adds support for Gatsby SSR and DSG on Netlify, and handles Gatsby redirects and headers.
+This plugin adds support for Gatsby redirects and headers on Cloudflare Pages.
 
 The plugin works by automatically generating a `_headers` and `_redirects` file at the root of the public folder to
-configure [HTTP headers](https://www.netlify.com/docs/headers-and-basic-auth/) and
-[redirects](https://www.netlify.com/docs/redirects/) on Netlify.
+configure [HTTP headers](https://developers.cloudflare.com/pages/platform/headers/) and
+[redirects](https://developers.cloudflare.com/pages/platform/redirects/) on Cloudflare Pages.
 
-By default, the plugin will add some basic security headers. You can easily add or replace headers through the plugin
-config.
-
-**When not to use the plugin:** In case you just want to use your own `_redirects` or `_headers` file for Netlify with
-Gatsby, you don't need this plugin. Instead, move those files in `/static/_redirects`, `/static/_headers` and Gatsby
-will copy them to your root folder during build where Netlify will pick them up. Note that this plugin is still required
-if you want to use SSR or DSG rendering.
+By default, the plugin will add some basic security headers. These can be disabled via the plugin config, and you can
+also add additional headers through the plugin config.
 
 ## Install
 
 ```shell
-npm install gatsby-plugin-netlify
+npm install gatsby-plugin-cloudflare-pages
+yarn add gatsby-plugin-cloudflare-pages
 ```
 
 ## How to use
 
-Add `gatsby-plugin-netlify` to your `gatsby-config`:
+Add `gatsby-plugin-cloudflare-pages` to your `gatsby-config`'s `plugins` entry:
 
-```js:title=gatsby-config.js
+```js:title=gatsby-config.ts
 module.exports = {
-  plugins: [`gatsby-plugin-netlify`]
+  plugins: [`gatsby-plugin-cloudflare-pages`]
 }
 ```
 
@@ -56,12 +52,22 @@ module.exports = {
 ### Headers
 
 The headers object represents a JS version of the
-[Netlify `_headers` file format](https://www.netlify.com/docs/headers-and-basic-auth/). You should pass in an object
-with string keys (representing the paths) and an array of strings for each header.
+[Cloudflare Pages `_headers` file format](https://developers.cloudflare.com/pages/platform/headers/). You should pass in
+an object with string keys (representing the paths) and an array of strings for each header.
+
+> Warning
+>
+> Headers do not apply to responses from Functions which are part of your Pages deployment, even if the route matches
+> the URL pattern.
+
+> Warning
+>
+> Cloudflare only allows a maximum of 100 header rules per project. The plugin will warn you if your file is over this,
+> but it will not error your build.
 
 An example:
 
-```javascript
+```js
 {
   options: {
     headers: {
@@ -84,10 +90,9 @@ javascript in the `static` folder.
 
 Do not specify the public path in the config, as the plugin will provide it for you.
 
-The Netlify `_headers` file does not inherit headers, and it will replace any matching headers it finds in more specific
-routes. For example, if you add a link to the root wildcard path (`/*`), it will be replaced by any more specific path.
-If you want a resource to put linked across the site, you will have to add to every path. To make this easier, the
-plugin provides the `allPageHeaders` option to inject the same headers on every path.
+The Cloudflare Pages `_headers` file allows for routes to inherit headers from multiple definitions. Pages will also
+combine headers defined multiple times and concatenate their values with commas. For more info, please read the example
+in the [Cloudflare Pages documentation](https://developers.cloudflare.com/pages/platform/headers/).
 
 ```javascript
 {
@@ -99,24 +104,31 @@ plugin provides the `allPageHeaders` option to inject the same headers on every 
       "/*": [
         "Basic-Auth: someuser:somepassword anotheruser:anotherpassword",
       ],
+      "/no-auth/*": [
+        // Unset `Basic-Auth` header for routes under /no-auth/*
+        "! Basic-Auth",
+      ],
+      "/blog/:slug": [
+        "X-Article-Name: :slug",
+      ],
     },
   }
 }
 ```
-
-You can validate the `_headers` config through the [Netlify playground app](https://play.netlify.com/headers).
 
 ### Redirects
 
 You can create redirects using the
 [`createRedirect`](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect) action.
 
+**Cloudflare Pages cannot create redirects based on language or country.**
+
 In addition to the options provided by the Gatsby API, you can pass these options specific to this plugin:
 
-| Attribute    | Description                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `force`      | Overrides existing content in the path. This is particularly useful for domain alias redirects. See [the Netlify documentation for this option](https://www.netlify.com/docs/redirects/#structured-configuration).                                                                                                                                                                                                                      |
-| `statusCode` | Overrides the HTTP status code which is set to `302` by default or `301` when [`isPermanent`](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect) is `true`. Since Netlify supports custom status codes, you can set one here. For example, `200` for rewrites, or `404` for a custom error page. See [the Netlify documentation for this option](https://www.netlify.com/docs/redirects/#http-status-codes). |
+| Attribute    | Description                                                                                                                                                                                                                                                                                     |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `force`      | Overrides existing content in the path. This is particularly useful for domain alias redirects. See [the Netlify documentation for this option](https://www.netlify.com/docs/redirects/#structured-configuration).                                                                              |
+| `statusCode` | Overrides the HTTP status code which is set to `302` by default or `301` when [`isPermanent`](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect) is `true`. You can set any redirect status code (301/2/3/7/8) here, as well as 200 to proxy to another page or URL. |
 
 An example:
 
@@ -125,11 +137,15 @@ exports.createPages = ({ actions }) => {
   const { createRedirect } = actions
 
   createRedirect({ fromPath: '/old-url', toPath: '/new-url', isPermanent: true })
-  createRedirect({ fromPath: '/url', toPath: '/zn-CH/url', Language: 'zn' })
   createRedirect({
     fromPath: '/url_that_is/not_pretty',
     toPath: '/pretty/url',
-    statusCode: 200,
+    statusCode: 307,
+  })
+  createRedirect({
+    fromPath: '/url_that_is/not_pretty',
+    toPath: '/pretty/url',
+    statusCode: 307,
   })
 }
 ```
@@ -142,8 +158,6 @@ redirects will be appended to the file.
 /home              /
 /blog/my-post.php  /blog/my-post
 ```
-
-You can validate the `_redirects` config through the [Netlify playground app](https://play.netlify.com/redirects).
 
 Redirect rules are automatically added for
 [client only paths](https://www.gatsbyjs.com/docs/how-to/routing/client-only-routes-and-user-authentication/). The

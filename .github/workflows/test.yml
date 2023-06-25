@@ -11,13 +11,8 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest] #, windows-latest] # TODO add an e2etest.bat file
-        node-version: [14.15.0, '*']
-        exclude:
-          - os: macOS-latest
-            node-version: 14.15.0
-          # - os: windows-latest
-          #   node-version: 14.15.0
+        os: [ubuntu-latest] #, windows-latest] # TODO add an e2etest.bat file
+        node-version: [14.15.0, 'lts']
       fail-fast: false
 
     steps:
@@ -28,6 +23,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           check-latest: '*'
+          cache: 'yarn'
+
       - name: Install dependencies
         run: yarn install --immutable
 

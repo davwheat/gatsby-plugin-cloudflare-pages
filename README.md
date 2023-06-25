@@ -35,7 +35,7 @@ remove default headers, or transform the given headers, you can use the followin
 module.exports = {
   plugins: [
     {
-      resolve: `gatsby-plugin-netlify`,
+      resolve: `gatsby-plugin-cloudflare-pages`,
       options: {
         headers: {}, // option to add more headers. `Link` headers are transformed by the below criteria
         allPageHeaders: [], // option to add headers for all pages. `Link` headers are transformed by the below criteria
@@ -75,7 +75,8 @@ An example:
         "Basic-Auth: someuser:somepassword anotheruser:anotherpassword",
       ],
       "/my-page": [
-        // matching headers (by type) are replaced by Netlify with more specific routes
+        // This will result in a header of `Basic-Auth: someuser:somepassword anotheruser:anotherpassword, differentuser:differentpassword`
+        //.which is likely not what you want
         "Basic-Auth: differentuser:differentpassword",
       ],
     },
@@ -121,14 +122,9 @@ in the [Cloudflare Pages documentation](https://developers.cloudflare.com/pages/
 You can create redirects using the
 [`createRedirect`](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect) action.
 
-**Cloudflare Pages cannot create redirects based on language or country.**
-
-In addition to the options provided by the Gatsby API, you can pass these options specific to this plugin:
-
-| Attribute    | Description                                                                                                                                                                                                                                                                                     |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `force`      | Overrides existing content in the path. This is particularly useful for domain alias redirects. See [the Netlify documentation for this option](https://www.netlify.com/docs/redirects/#structured-configuration).                                                                              |
-| `statusCode` | Overrides the HTTP status code which is set to `302` by default or `301` when [`isPermanent`](https://www.gatsbyjs.com/docs/reference/config-files/actions/#createRedirect) is `true`. You can set any redirect status code (301/2/3/7/8) here, as well as 200 to proxy to another page or URL. |
+> Warning
+>
+> Cloudflare Pages cannot create redirects based on language or country, and the `force` option also has no effect.
 
 An example:
 

@@ -12,6 +12,7 @@ jest.mock(`fs-extra`, () => {
     existsSync: jest.fn(),
   }
 })
+
 // eslint-disable-next-line max-lines-per-function
 describe(`build-headers-program`, () => {
   let reporter: any
@@ -141,7 +142,7 @@ describe(`build-headers-program`, () => {
       transformHeaders: (headers, path) => {
         if (path !== '/webpack-runtime-acaa8994f1f704475e21.js') {
           return headers
-        }        
+        }
 
         headers.push('X-TransformedPageHeader: webpack-runtime')
         return headers

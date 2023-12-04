@@ -89,6 +89,7 @@ exports[`build-headers-program without caching headers 1`] = `
 
 exports[`build-headers-program with all page headers configuration 1`] = `
 "## Created with gatsby-plugin-cloudflare-pages
+
 /*
   X-Frame-Options: DENY
   X-XSS-Protection: 1; mode=block
@@ -137,6 +138,7 @@ exports[`build-headers-program with all page headers configuration 1`] = `
 
 exports[`build-headers-program with transform headers configuration 1`] = `
 "## Created with gatsby-plugin-cloudflare-pages
+
 /*
   X-Frame-Options: DENY
   X-XSS-Protection: 1; mode=block

@@ -13,8 +13,9 @@ import {
 import { isBoolean, flow } from './util'
 
 const getHeaderName = (header: any) => {
-  const matches = header.match(/^([^:]+):/)
-  return matches && matches[1]
+  const matches = header.match(/(?:^([^:]+):)/)
+  const unsetMatches = header.match(/(?:^(! [^:]+)$)/)
+  return (matches && matches[1]) || (unsetMatches && unsetMatches[1])
 }
 
 const validHeaders = (headers: any, reporter: any) => {

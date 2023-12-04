@@ -132,7 +132,7 @@ describe(`build-headers-program`, () => {
 
     expect(reporter.panic).not.toHaveBeenCalled()
     expect(await readFile(pluginData.publicFolder(`_headers`), `utf8`)).toMatchSnapshot()
-  })  
+  })
 
   it(`with transform headers configuration`, async () => {
     const pluginData = await createPluginData()
@@ -146,6 +146,22 @@ describe(`build-headers-program`, () => {
 
         headers.push('X-TransformedPageHeader: webpack-runtime')
         return headers
+      }
+    }
+
+    await buildHeadersProgram(pluginData, pluginOptions, reporter)
+
+    expect(reporter.panic).not.toHaveBeenCalled()
+    expect(await readFile(pluginData.publicFolder(`_headers`), `utf8`)).toMatchSnapshot()
+  })
+
+  it(`unsets header`, async () => {
+    const pluginData = await createPluginData()
+
+    const pluginOptions = {
+      ...DEFAULT_OPTIONS,
+      headers: {
+        "/*.jpg": ["! X-Frame-Options"],
       }
     }
 

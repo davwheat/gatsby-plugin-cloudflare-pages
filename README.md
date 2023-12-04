@@ -49,6 +49,9 @@ module.exports = {
 }
 ```
 
+The `allPageHeaders` option **does not** add a wildcard entry to the `_headers` file. Instead, it adds the headers to every
+entry within that file. For a wildcard entry, you should use the `headers` option with a path of `/*`.
+
 ### Headers
 
 The headers object represents a JS version of the

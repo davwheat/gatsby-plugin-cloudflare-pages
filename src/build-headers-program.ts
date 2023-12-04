@@ -201,7 +201,7 @@ const applyTransformHeaders =
   ({ transformHeaders }: any) =>
   (headers: any) =>
     Object.entries(headers).reduce((temp, [key, value]) => {
-      temp[key] = transformHeaders(value)
+      temp[key] = transformHeaders(value, key)
       return temp
     }, {})
 

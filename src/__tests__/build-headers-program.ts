@@ -170,4 +170,20 @@ describe(`build-headers-program`, () => {
     expect(reporter.panic).not.toHaveBeenCalled()
     expect(await readFile(pluginData.publicFolder(`_headers`), `utf8`)).toMatchSnapshot()
   })
+
+  it(`merges set and unset headers`, async () => {
+    const pluginData = await createPluginData()
+
+    const pluginOptions = {
+      ...DEFAULT_OPTIONS,
+      headers: {
+        "/*": ["! X-Frame-Options"],
+      }
+    }
+
+    await buildHeadersProgram(pluginData, pluginOptions, reporter)
+
+    expect(reporter.panic).not.toHaveBeenCalled()
+    expect(await readFile(pluginData.publicFolder(`_headers`), `utf8`)).toMatchSnapshot()
+  })
 })

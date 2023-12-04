@@ -66,11 +66,20 @@ const headersMerge = (userHeaders: any, defaultHeaders: any) => {
     merged[path] = Object.values(headersMap)
   })
   Object.keys(userHeaders).forEach((path) => {
-    if (!merged[path]) {
-      merged[path] = userHeaders[path]
-    }
+    merged[path] ||= userHeaders[path]
   })
+  
   return merged
+}
+
+const autoRemoveHeaders = (headers: any) => {
+  const merged = {}
+  Object.keys(headers).forEach((path) => {
+    const h = headers[path]
+    const unsetHeaders = h.filter((header: any) => header.startsWith(`! `)).map((header: any) => header.slice(2))
+    merged[path] = h.filter((header: any) => !unsetHeaders.includes(getHeaderName(header)))
+  })
+  return merged 
 }
 
 const transformLink = (manifest: any, publicFolder: any, pathPrefix: any) => (header: any) =>
@@ -220,6 +229,7 @@ const buildHeadersProgram = (pluginData: any, pluginOptions: any, reporter: any)
     applySecurityHeaders(pluginOptions),
     applyCachingHeaders(pluginData, pluginOptions),
     mapUserLinkAllPageHeaders(pluginData, pluginOptions),
+    autoRemoveHeaders,
     applyTransformHeaders(pluginOptions),
     transformToString,
     writeHeadersFile(pluginData),

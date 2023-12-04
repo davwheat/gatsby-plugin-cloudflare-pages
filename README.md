@@ -98,6 +98,8 @@ The Cloudflare Pages `_headers` file allows for routes to inherit headers from m
 combine headers defined multiple times and concatenate their values with commas. For more info, please read the example
 in the [Cloudflare Pages documentation](https://developers.cloudflare.com/pages/platform/headers/).
 
+An `!` entry will override any previous entries for that header on that path.
+
 ```javascript
 {
   options: {

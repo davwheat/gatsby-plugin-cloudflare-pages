@@ -1,6 +1,7 @@
 import { existsSync, readFile, writeFile } from 'fs-extra'
 
 import { HEADER_COMMENT } from './constants'
+import type { Reporter } from 'gatsby'
 
 const toPagesPath = (fromPath: string, toPath: string): Array<string> => {
   if (fromPath.match(/\?/)) {
@@ -16,10 +17,13 @@ const toPagesPath = (fromPath: string, toPath: string): Array<string> => {
 }
 
 // eslint-disable-next-line max-statements
-export default async function writeRedirectsFile(pluginData: any, redirects: any, rewrites: any) {
+export default async function writeRedirectsFile(pluginData: any, redirects: any, rewrites: any, reporter: Reporter) {
   const { publicFolder } = pluginData
 
-  if (redirects.length === 0 && rewrites.length === 0) return null
+  if (redirects.length === 0 && rewrites.length === 0) {
+    reporter.info(`[gatsby-plugin-cloudflare-pages] No redirects or rewrites found`)
+    return null
+  }
 
   const FILE_PATH = publicFolder(`_redirects`)
 
@@ -63,5 +67,7 @@ export default async function writeRedirectsFile(pluginData: any, redirects: any
     data = fileContents
   }
 
-  return writeFile(FILE_PATH, [data, HEADER_COMMENT, ...redirects, ...rewrites].join(`\n`))
+  reporter.info(`[gatsby-plugin-cloudflare-pages] Creating ${redirects.length} redirect${redirects.length === 1 ? `` : `s`} and ${rewrites.length} rewrite${rewrites.length === 1 ? `` : `s`}...`)
+
+  return await writeFile(FILE_PATH, [data, HEADER_COMMENT, ...redirects, ...rewrites].join(`\n`))
 }

@@ -115,6 +115,6 @@ export const onPostBuild: GatsbyNode['onPostBuild'] = async ({ store, pathPrefix
   await Promise.all([
     generateSkipFile,
     buildHeadersProgram(pluginData, pluginOptions, reporter),
-    createRedirects(pluginData, redirects, rewrites),
+    createRedirects(pluginData, redirects, rewrites, reporter),
   ])
 }

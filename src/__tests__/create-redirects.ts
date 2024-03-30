@@ -43,12 +43,22 @@ const redirects = [
 ]
 
 describe(`create-redirects`, () => {
+  let reporter: any
+
+  beforeEach(() => {
+    reporter = {
+      info: jest.fn(),
+      panic: jest.fn(),
+    }
+  })
+
   it(`writes file`, async () => {
     const pluginData = await createPluginData()
 
-    await createRedirects(pluginData, redirects, [])
+    await createRedirects(pluginData, redirects, [], reporter)
 
     const output = await readFile(pluginData.publicFolder(`_redirects`), `utf8`)
     expect(output).toMatchSnapshot()
+    expect(reporter.panic).not.toHaveBeenCalled()
   })
 })
